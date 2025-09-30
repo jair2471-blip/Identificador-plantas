@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlantID - Identificador de Plantas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .info-banner {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .info-banner h3 {
+            color: #155724;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .info-banner p {
+            color: #155724;
+            font-size: 0.9em;
+        }
+
+        .api-setup {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .api-setup h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .api-setup input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        .api-setup button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .api-setup button:hover {
+            background: #218838;
+        }
+
+        .api-setup small {
+            color: #856404;
+            display: block;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .api-status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .api-status.active {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 16px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-area.dragover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #fff;
+        }
+
+        .upload-area.dragover p {
+            color: #fff;
+        }
+
+        .upload-area.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .upload-area p {
+            color: #667eea;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .upload-area small {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .preview-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .preview-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .plant-name {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .scientific-name {
+            font-style: italic;
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .confidence {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .info-section h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-section p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .info-section ul {
+            color: #555;
+            line-height: 1.8;
+            padding-left: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .suggestion-item {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .suggestion-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .suggestion-item .name {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .suggestion-item .score {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+
+        .family-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌿 PlantID</h1>
+        <p class="subtitle">Identifica plantas con Pl@ntNet - ¡100% Gratis!</p>
+
+        <div class="info-banner">
+            <h3>✨ Powered by Pl@ntNet</h3>
+            <p>Proyecto científico colaborativo - Sin límites - Sin costo</p>
+        </div>
+
+        <div class="api-setup" id="apiSetup">
+            <h3>⚙️ Configuración de API (Opcional)</h3>
+            <input type="text" id="apiKeyInput" placeholder="Pega tu API Key de Pl@ntNet aquí (opcional)">
+            <button onclick="saveApiKey()">Guardar API Key</button>
+            <small>
+                📝 <strong>Pl@ntNet es GRATIS:</strong><br>
+                • Puedes usar sin API Key (modo básico)<br>
+                • O regístrate en <a href="https://my.plantnet.org/" target="_blank">my.plantnet.org</a> para más funciones<br>
+                • Haz clic en "Omitir" si no quieres API Key
+            </small>
+            <button onclick="skipApiKey()" style="background: #6c757d; margin-top: 10px;">Omitir y usar sin API Key</button>
+        </div>
+
+        <div class="api-status" id="apiStatus">
+            ✅ Listo para identificar plantas
+        </div>
+
+        <div class="upload-area disabled" id="uploadArea">
+            <div class="upload-icon">📸</div>
+            <p>Haz clic o arrastra una imagen aquí</p>
+            <small>Soporta JPG, PNG (máx. 5MB) - Enfoca hojas, flores o frutos</small>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+            <img id="previewImage" class="preview-image" alt="Vista previa">
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="color: #667eea; font-weight: 600;">Analizando planta con IA...</p>
+            <small style="color: #888;">Esto puede tomar 10-20 segundos</small>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result" id="result">
+            <h2 class="plant-name" id="plantName"></h2>
+            <p class="scientific-name" id="scientificName"></p>
+            <div class="confidence" id="confidence"></div>
+
+            <div class="info-section">
+                <h3>🏷️ Clasificación</h3>
+                <p id="family"></p>
+            </div>
+
+            <div class="info-section" id="suggestionsSection" style="display: none;">
+                <h3>🔍 Otras posibilidades</h3>
+                <div class="suggestions" id="suggestions"></div>
+            </div>
+
+            <div class="info-section">
+                <h3>📋 Información</h3>
+                <p id="description"></p>
+                <p id="wikiLink"></p>
+            </div>
+
+            <button class="btn" onclick="reset()">Identificar otra planta</button>
+        </div>
+    </div>
+
+    <script>
+        let apiKey = '';
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const errorDiv = document.getElementById('error');
+
+        // Verificar si ya hay API Key guardada
+        const savedKey = localStorage.getItem('plantnet_api_key');
+        if (savedKey) {
+            apiKey = savedKey;
+            document.getElementById('apiSetup').style.display = 'none';
+            document.getElementById('apiStatus').classList.add('active');
+            uploadArea.classList.remove('disabled');
+            enableUpload();
+        }
+
+        function saveApiKey() {
+            const input = document.getElementById('apiKeyInput');
+            const key = input.value.trim();
+            
+            if (key) {
+                apiKey = key;
+                localStorage.setItem('plantnet_api_key', key);
+                document.getElementById('apiSetup').style.display = 'none';
+                document.getElementById('apiStatus').classList.add('active');
+                uploadArea.classList.remove('disabled');
+                enableUpload();
+            } else {
+                alert('Por favor ingresa una API Key válida o haz clic en "Omitir"');
+            }
+        }
+
+        function skipApiKey() {
+            apiKey = 'demo'; // Usar modo sin API
+            document.getElementById('apiSetup').style.display = 'none';
+            document.getElementById('apiStatus').classList.add('active');
+            document.getElementById('apiStatus').textContent = '✅ Modo básico activado - ¡Listo para identificar!';
+            uploadArea.classList.remove('disabled');
+            enableUpload();
+        }
+
+        function enableUpload() {
+            uploadArea.addEventListener('click', () => {
+                if (!uploadArea.classList.contains('disabled')) {
+                    fileInput.click();
+                }
+            });
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (!uploadArea.classList.contains('disabled')) {
+                    uploadArea.classList.add('dragover');
+                }
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                if (!uploadArea.classList.contains('disabled')) {
+                    const file = e.dataTransfer.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        handleFile(file);
+                    }
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFile(file);
+                }
+            });
+        }
+
+        function handleFile(file) {
+            if (file.size > 5 * 1024 * 1024) {
+                errorDiv.textContent = '❌ La imagen es muy grande. Máximo 5MB.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewContainer.style.display = 'block';
+                uploadArea.style.display = 'none';
+                errorDiv.style.display = 'none';
+                
+                // Llamar a la API de Pl@ntNet
+                identifyPlant(file);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function identifyPlant(file) {
+            loading.style.display = 'block';
+            
+            try {
+                const formData = new FormData();
+                formData.append('images', file);
+                formData.append('organs', 'auto'); // Detectar automáticamente (hoja, flor, etc)
+                
+                // URL de la API de Pl@ntNet
+                let url = 'https://my-api.plantnet.org/v2/identify/all?include-related-images=false&no-reject=false&lang=es';
+                
+                // Si tiene API Key, agregarla
+                if (apiKey && apiKey !== 'demo') {
+                    url += `&api-key=${apiKey}`;
+                }
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                showResult(data);
+                
+            } catch (error) {
+                loading.style.display = 'none';
+                console.error('Error:', error);
+                errorDiv.innerHTML = `
+                    ❌ Error al identificar la planta.<br>
+                    <strong>Sugerencias:</strong><br>
+                    • Asegúrate de tener buena conexión a internet<br>
+                    • Usa una foto más clara de hojas, flores o frutos<br>
+                    • Intenta con otra imagen<br>
+                    • Considera registrarte en Pl@ntNet para obtener una API Key<br>
+                    <small>Error técnico: ${error.message}</small>
+                `;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function showResult(data) {
+            loading.style.display = 'none';
+            
+            if (!data.results || data.results.length === 0) {
+                errorDiv.innerHTML = `
+                    ❌ No se pudo identificar la planta.<br>
+                    <strong>Consejos:</strong><br>
+                    • Toma una foto más clara de las hojas o flores<br>
+                    • Asegúrate de que la planta sea visible<br>
+                    • Evita fondos muy complejos<br>
+                    • Intenta con mejor iluminación
+                `;
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const topMatch = data.results[0];
+            
+            // Nombre científico
+            document.getElementById('plantName').textContent = topMatch.species.scientificNameWithoutAuthor || topMatch.species.scientificName;
+            
+            // Nombres comunes
+            const commonNames = topMatch.species.commonNames ? 
+                topMatch.species.commonNames.join(', ') : 
+                'Sin nombre común disponible';
+            document.getElementById('scientificName').textContent = commonNames;
+            
+            // Confianza
+            const confidence = (topMatch.score * 100).toFixed(1);
+            document.getElementById('confidence').textContent = `Confianza: ${confidence}%`;
+            
+            // Familia
+            const family = topMatch.species.family ? 
+                topMatch.species.family.scientificNameWithoutAuthor : 
+                'Familia desconocida';
+            document.getElementById('family').innerHTML = `
+                <strong>Familia:</strong> <span class="family-badge">${family}</span><br>
+                <strong>Género:</strong> ${topMatch.species.genus ? topMatch.species.genus.scientificNameWithoutAuthor : 'Desconocido'}
+            `;
+            
+            // Descripción
+            let description = 'Esta es una identificación basada en características visuales. ';
+            if (topMatch.gbif && topMatch.gbif.id) {
+                description += `Para más información, consulta bases de datos científicas.`;
+            }
+            document.getElementById('description').textContent = description;
+            
+            // Enlace a Wikipedia si existe
+            const wikiLink = document.getElementById('wikiLink');
+            const scientificName = topMatch.species.scientificNameWithoutAuthor.replace(/ /g, '_');
+            wikiLink.innerHTML = `
+                <a href="https://es.wikipedia.org/wiki/${scientificName}" target="_blank" style="color: #667eea; font-weight: 600;">
+                    📖 Ver en Wikipedia →
+                </a>
+            `;
+            
+            // Mostrar otras sugerencias
+            if (data.results.length > 1) {
+                document.getElementById('suggestionsSection').style.display = 'block';
+                const suggestionsDiv = document.getElementById('suggestions');
+                suggestionsDiv.innerHTML = '';
+                
+                data.results.slice(1, 6).forEach(suggestion => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    
+                    const commonName = suggestion.species.commonNames && suggestion.species.commonNames[0] ? 
+                        suggestion.species.commonNames[0] : 
+                        suggestion.species.scientificNameWithoutAuthor;
+                    
+                    item.innerHTML = `
+                        <div>
+                            <div class="name">${commonName}</div>
+                            <small style="color: #888;">${suggestion.species.scientificNameWithoutAuthor}</small>
+                        </div>
+                        <div class="score">${(suggestion.score * 100).toFixed(1)}%</div>
+                    `;
+                    suggestionsDiv.appendChild(item);
+                });
+            }
+            
+            result.style.display = 'block';
+        }
+
+        function reset() {
+            previewContainer.style.display = 'none';
+            result.style.display = 'none';
+            uploadArea.style.display = 'block';
+            errorDiv.style.display = 'none';
+            fileInput.value = '';
+            document.getElementById('suggestionsSection').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
