@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlantID - Identificador de Plantas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 16px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-area.dragover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #fff;
+        }
+
+        .upload-area.dragover p {
+            color: #fff;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .upload-area p {
+            color: #667eea;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .upload-area small {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .preview-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .preview-image {
+            width: 100%;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .plant-name {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .scientific-name {
+            font-style: italic;
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .confidence {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .info-section h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-section p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌿 PlantID</h1>
+        <p class="subtitle">Identifica cualquier planta con inteligencia artificial</p>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📸</div>
+            <p>Haz clic o arrastra una imagen aquí</p>
+            <small>Soporta JPG, PNG, WEBP (máx. 10MB)</small>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+            <img id="previewImage" class="preview-image" alt="Vista previa">
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="color: #667eea; font-weight: 600;">Analizando planta...</p>
+        </div>
+
+        <div class="result" id="result">
+            <h2 class="plant-name" id="plantName"></h2>
+            <p class="scientific-name" id="scientificName"></p>
+            <div class="confidence" id="confidence"></div>
+
+            <div class="info-section">
+                <h3>📋 Descripción</h3>
+                <p id="description"></p>
+            </div>
+
+            <div class="info-section">
+                <h3>🌍 Hábitat</h3>
+                <p id="habitat"></p>
+            </div>
+
+            <div class="info-section">
+                <h3>💧 Cuidados</h3>
+                <p id="care"></p>
+            </div>
+
+            <div class="info-section">
+                <h3>🏷️ Características</h3>
+                <div class="tags" id="tags"></div>
+            </div>
+
+            <button class="btn" onclick="reset()">Identificar otra planta</button>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+
+        // Plantas de ejemplo para la demo
+        const plants = [
+            {
+                name: "Monstera Deliciosa",
+                scientific: "Monstera deliciosa",
+                confidence: 95,
+                description: "Planta tropical perenne conocida por sus hojas grandes y perforadas. Es una de las plantas de interior más populares debido a su aspecto exótico y fácil cuidado.",
+                habitat: "Originaria de las selvas tropicales de América Central, desde México hasta Panamá. Crece naturalmente trepando en árboles grandes.",
+                care: "Requiere luz indirecta brillante, riego moderado cuando la tierra esté seca, y temperatura entre 18-27°C. Beneficia de limpieza regular de hojas.",
+                tags: ["Interior", "Tropical", "Trepadora", "Fácil cuidado"]
+            },
+            {
+                name: "Suculenta Echeveria",
+                scientific: "Echeveria elegans",
+                confidence: 92,
+                description: "Planta suculenta formadora de rosetas con hojas carnosas de color verde azulado. Popular por su bajo mantenimiento y hermosa forma geométrica.",
+                habitat: "Nativa de México y regiones áridas de América Central. Crece en zonas rocosas y soleadas con buen drenaje.",
+                care: "Necesita luz solar directa abundante, riego escaso (cada 10-14 días), sustrato muy drenante. Evitar encharcamiento para prevenir pudrición.",
+                tags: ["Suculenta", "Sol directo", "Bajo riego", "Resistente"]
+            },
+            {
+                name: "Helecho de Boston",
+                scientific: "Nephrolepis exaltata",
+                confidence: 89,
+                description: "Helecho elegante con frondas arqueadas y follaje plumoso. Excelente purificador de aire y muy apreciado como planta colgante de interior.",
+                habitat: "Originario de regiones tropicales húmedas de todo el mundo. Crece en bosques sombreados y húmedos.",
+                care: "Prefiere luz indirecta media, alta humedad ambiental, riego frecuente manteniendo tierra húmeda pero no empapada. Temperatura ideal 15-24°C.",
+                tags: ["Interior", "Humedad alta", "Purificador", "Sombra"]
+            }
+        ];
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewContainer.style.display = 'block';
+                uploadArea.style.display = 'none';
+                
+                // Simular análisis
+                loading.style.display = 'block';
+                setTimeout(() => {
+                    showResult();
+                }, 2500);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showResult() {
+            loading.style.display = 'none';
+            
+            // Seleccionar planta aleatoria
+            const plant = plants[Math.floor(Math.random() * plants.length)];
+            
+            document.getElementById('plantName').textContent = plant.name;
+            document.getElementById('scientificName').textContent = plant.scientific;
+            document.getElementById('confidence').textContent = `Confianza: ${plant.confidence}%`;
+            document.getElementById('description').textContent = plant.description;
+            document.getElementById('habitat').textContent = plant.habitat;
+            document.getElementById('care').textContent = plant.care;
+            
+            const tagsContainer = document.getElementById('tags');
+            tagsContainer.innerHTML = '';
+            plant.tags.forEach(tag => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'tag';
+                tagEl.textContent = tag;
+                tagsContainer.appendChild(tagEl);
+            });
+            
+            result.style.display = 'block';
+        }
+
+        function reset() {
+            previewContainer.style.display = 'none';
+            result.style.display = 'none';
+            uploadArea.style.display = 'block';
+            fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
